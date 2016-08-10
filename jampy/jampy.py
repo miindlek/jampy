@@ -1,14 +1,17 @@
 import os
+import traceback
 
 import click
 
 
 class CodeJammer:
-    def __init__(self, *, base_path="", file_list, debug=False):
-        in_paths = [os.path.join(base_path, f) for f in file_list]
-        out_paths = ["_out".join(os.path.splitext(p)) for p in in_paths]
+    base_path = ""
+    file_list = None
 
-        self._path_tuples = list(zip(in_paths, out_paths))
+    def __init__(self, debug=False):
+        if not self.file_list:
+            raise ValueError('"file_list" variable not declared. '
+                             'You need to specify a list of input files as class attribute.')
         self._debug = debug
 
     def _read_file(self, path):
@@ -34,10 +37,13 @@ class CodeJammer:
         click.secho('\r\r\r done.', fg='green')
 
     def run(self):
-        for in_path, out_path in self._path_tuples:
+        for file_name in self.file_list:
+            in_path = os.path.join(self.base_path, file_name)
+            out_path = "_out".join(os.path.splitext(in_path))
+
             try:
                 self._solve(in_path, out_path)
             except Exception:
                 click.secho('\r\r\r failed!', fg='red')
                 if self._debug:
-                    raise
+                    traceback.print_last()
